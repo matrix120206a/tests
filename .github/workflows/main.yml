@@ -1,0 +1,52 @@
+name: test
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-11-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Disable password complexity
+        run: |
+          secedit /export /cfg $env:TEMP\secpol.cfg
+          (Get-Content $env:TEMP\secpol.cfg).Replace("PasswordComplexity = 1", "PasswordComplexity = 0") | Set-Content $env:TEMP\secpol.cfg
+          secedit /configure /db $env:TEMP\secedit.sdb /cfg $env:TEMP\secpol.cfg /areas SECURITYPOLICY
+          gpupdate /force
+
+      - name: Create user Matrix
+        run: |
+          net user Matrix Matrix#1234 /add
+          net localgroup "Administrators" Matrix /add
+          net localgroup "Remote Desktop Users" Matrix /add
+
+      - name: Install ZeroTier
+        run: |
+          Invoke-WebRequest -Uri "https://download.zerotier.com/dist/ZeroTierOne.msi" -OutFile "$env:TEMP\ZeroTierOne.msi"
+          Start-Process msiexec.exe -Wait -ArgumentList '/i', "$env:TEMP\ZeroTierOne.msi", '/qn'
+      
+      - name: Join ZeroTier network
+        run: |
+          & "C:\Program Files (x86)\ZeroTier\One\zerotier-cli.bat" join 1c33c1ced04fa8d9
+
+      - name: Enable RDP
+        run: |
+          # Aktifkan RDP
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          # Izinkan lewat firewall
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          # Tambahkan user Matrix ke grup (tidak error jika sudah ada)
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "Matrix" -ErrorAction SilentlyContinue
+
+      - name: Show ZeroTier Info
+        run: |
+          & "C:\Program Files (x86)\ZeroTier\One\zerotier-cli.bat" listnetworks
+          
+      - name: Keep session alive
+        run: |
+          Write-Output "Runner is alive. Press Ctrl+C to stop."
+          while ($true) { Start-Sleep -Seconds 300 }
