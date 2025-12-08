@@ -52,12 +52,12 @@ jobs:
           cd D:\
           mkdir ZalithLauncher2-custom-build
           
-          pip install gdown
-          gdown --id $Wall -O $Wall_filename
-          gdown --id $android_sdk_link -O $android_sdk_filename
-          gdown --id $AndroidStudio_link -O $AndroidStudio_filename
-          tar -xf $android_sdk_filename
-          tar -xf $AndroidStudio_filename
+          #pip install gdown
+          #gdown --id $Wall -O $Wall_filename
+          #gdown --id $android_sdk_link -O $android_sdk_filename
+          #gdown --id $AndroidStudio_link -O $AndroidStudio_filename
+          #tar -xf $android_sdk_filename
+          #tar -xf $AndroidStudio_filename
     
        
       - name: Disable Password
@@ -248,6 +248,10 @@ jobs:
           Register-ScheduledTask -Action $Action1 -Trigger $Trigger -TaskName "ApplyDarkTheme" -User "Matrix" -Force -RunLevel Highest
           Register-ScheduledTask -Action $Action2 -Trigger $Trigger -TaskName "SetDarkThemeCMD" -User "Matrix" -Force -RunLevel Highest
           Register-ScheduledTask -Action $Action3 -Trigger $Trigger -TaskName "SetWallpaperCMD" -User "Matrix" -Force -RunLevel Highest
+
+      - name: Display Tailscale IP
+        run: |
+          & "C:\Program Files\Tailscale\tailscale.exe" ip -4
 
       - name: Keep session alive
         run: |
