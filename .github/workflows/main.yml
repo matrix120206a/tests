@@ -253,8 +253,18 @@ jobs:
         run: |
           & "C:\Program Files\Tailscale\tailscale.exe" ip -4
           cp D:\a\tests\tests\windows-11-dark-mode-blue-stock-official-3840x2400-5630.jpg D:\
-
-      - name: Keep session alive
+          Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+          Start-Service sshd
+          Set-Service -Name sshd -StartupType Automatic
+          New-NetFirewallRule -Name sshd `
+          -DisplayName 'OpenSSH Server (sshd)' `
+          -Enabled True `
+          -Direction Inbound `
+          -Protocol TCP `
+          -Action Allow `
+          -LocalPort 22
+                  
+      - name: Keep sessionalive
         run: |
           & "C:\Program Files\Tailscale\tailscale.exe" ip -4
           Write-Output "Runner is alive. Press Ctrl+C to stop."
